@@ -33,15 +33,15 @@ This project explores how **agentic AI systems + RAG** can assist by providing:
 ## 🧠 System Architecture
 
 Resume (PDF / TXT)
-↓
+|
 Agent 1: Document Processor
-↓
+|
 Agent 2: Resume Reader
-↓
+|
 Agent 3: Evaluator (RAG)
-↓
+|
 Final Analysis + Verdict
-↓
+|
 Streamlit UI Output
 
 
