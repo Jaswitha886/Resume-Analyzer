@@ -1,0 +1,5 @@
+Name: Jaswitha
+Education: B.Tech AIML
+Skills: Python, Machine Learning, Retrieval-Augmented Generation (RAG)
+Projects: Image-based UI Test Case Generator
+Internships: None

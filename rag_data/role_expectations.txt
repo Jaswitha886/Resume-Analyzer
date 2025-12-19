@@ -1,0 +1,19 @@
+Role: AI / Software Engineering Intern
+
+Expected Skills:
+- Python programming
+- Data structures basics
+- Machine learning fundamentals
+- Git and version control
+- Problem-solving skills
+
+Preferred Experience:
+- Personal or academic projects
+- Exposure to AI concepts
+- Basic understanding of APIs
+
+Interview Focus Areas:
+- Python basics
+- ML fundamentals
+- Project explanation
+- Problem-solving approach
