@@ -44,8 +44,7 @@ Analysis + Verdict
 ↓
 UI Output
 
-yaml
-Copy code
+
 
 ---
 
@@ -119,7 +118,6 @@ The application will open automatically in your browser.
 
 ## 📌 Example Output
 
-Copy code
 Strengths:
 - Strong Python fundamentals
 - Relevant academic projects
