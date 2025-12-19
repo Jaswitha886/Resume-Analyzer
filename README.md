@@ -32,24 +32,15 @@ This project explores how **agentic AI systems + RAG** can assist by providing:
 
 ## 🧠 System Architecture
 
-Resume (PDF / TXT)
-|
-v
-Agent 1: Document Processor
-|
-v
-Agent 2: Resume Reader
-|
-v
-Agent 3: Evaluator (RAG)
-|
-v
-Final Analysis + Verdict
-|
-v
-Streamlit UI Output
-
-
+ ```mermaid
+flowchart TD
+    A[User] --> B[Resume]
+    B --> C[Agent 1: Document Processor]
+    C --> D[Agent 2: Resume Reader]
+    D --> E[Agent 3: Evaluator]
+    E --> F[Final Analysis + Verdict]
+    F --> G[Streamlit UI Output]
+```
 
 Each agent has a **single responsibility**, making the system modular and explainable.
 
