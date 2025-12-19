@@ -1,6 +1,7 @@
 import chromadb
 from sentence_transformers import SentenceTransformer
 
+
 def setup_rag():
     client = chromadb.Client()
     collection = client.get_or_create_collection(name="role_expectations")

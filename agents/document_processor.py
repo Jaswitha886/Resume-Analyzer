@@ -1,14 +1,17 @@
 from autogen import ConversableAgent
 
+
 def document_processor_agent(resume_text: str) -> str:
     agent = ConversableAgent(
         name="document_processor_agent",
         llm_config={
-            "config_list": [{
-                "model": "llama3.2",
-                "api_type": "ollama",
-                "base_url": "http://localhost:11434"
-            }]
+            "config_list": [
+                {
+                    "model": "llama3.2",
+                    "api_type": "ollama",
+                    "base_url": "http://localhost:11434",
+                }
+            ]
         },
         human_input_mode="NEVER",
     )
@@ -17,8 +20,8 @@ def document_processor_agent(resume_text: str) -> str:
 You are a document processing agent.
 
 Task:
-- Clean resume text
-- Remove noise and formatting
+- Clean the resume text
+- Remove noise and formatting artifacts
 - Keep only meaningful content
 
 Resume Text:
