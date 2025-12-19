@@ -1,32 +1,32 @@
-# 📄 Resume Analyzer using RAG (with UI & PDF Support)
+# 📄 Resume Analyzer using Multi-Agent RAG (with UI & PDF Support)
 
 ## 📌 Project Overview
 
-This project is a **Resume Analyzer** that uses **Retrieval-Augmented Generation (RAG)** to evaluate a candidate’s resume against predefined role expectations.
+This project is a **Resume Analyzer system** built using a **multi-agent architecture** and **Retrieval-Augmented Generation (RAG)**.
 
-The system:
-- Accepts resumes in **PDF or TXT format**
-- Extracts resume content
-- Compares it with role-specific expectations using RAG
-- Generates structured feedback
-- Gives a **final eligibility verdict** (Applicable / Not Applicable)
+The application allows users to upload a **resume in PDF or TXT format**, analyzes it against predefined **role expectations**, and generates:
 
-The project runs **fully locally** using **Ollama**, without any paid APIs.
+- Structured resume feedback
+- Skill gap analysis
+- Improvement suggestions
+- Interview preparation questions
+- A **final eligibility verdict** (Applicable / Not Applicable)
+
+The system runs **fully locally** using **Ollama**, without any paid APIs.
 
 ---
 
 ## 🎯 Problem Statement
 
-Evaluating resumes manually is:
+Manual resume screening is often:
 - Time-consuming
 - Subjective
 - Inconsistent
 
-This project explores how **AI + RAG** can assist by:
-- Analyzing resumes objectively
-- Identifying strengths and skill gaps
-- Suggesting improvements
-- Helping with interview preparation
+This project explores how **agentic AI systems + RAG** can assist by providing:
+- Objective evaluation
+- Role-specific feedback
+- Explainable decision-making
 
 ---
 
@@ -34,65 +34,87 @@ This project explores how **AI + RAG** can assist by:
 
 Resume (PDF / TXT)
 ↓
-Text Extraction
+Agent 1: Document Processor
 ↓
-Resume Content
+Agent 2: Resume Reader
 ↓
-RAG (Role Expectations)
+Agent 3: Evaluator (RAG)
 ↓
-Analysis + Verdict
+Final Analysis + Verdict
 ↓
-UI Output
+Streamlit UI Output
 
+
+
+Each agent has a **single responsibility**, making the system modular and explainable.
 
 
 ---
 
-## 🤖 Key Components
+## 🤖 Multi-Agent Design
 
-### 1️⃣ Resume Analyzer Agent
-- Uses a text-based LLM
-- Analyzes resume content
+### 🧑‍🔧 Agent 1: Document Processor
+- Cleans and normalizes resume text
+- Removes noise and formatting
+- Performs no evaluation
+
+### 📖 Agent 2: Resume Reader
+- Understands resume content
+- Extracts structured information:
+  - Education
+  - Skills
+  - Projects
+  - Experience
+
+### 🧠 Agent 3: Evaluator Agent (RAG)
+- Retrieves role expectations from the RAG knowledge base
+- Compares them with the structured resume
 - Generates:
   - Strengths
   - Skill gaps
-  - Improvement suggestions
+  - Suggestions
   - Interview questions
-  - Final eligibility decision
-
-### 2️⃣ RAG Knowledge Base
-- Stores role expectations
-- Used to ground analysis
-- Prevents generic or hallucinated feedback
-
-### 3️⃣ Streamlit UI
-- Upload resumes via browser
-- Supports **PDF and TXT**
-- Displays analysis report interactively
+  - **Final eligibility decision**
 
 ---
 
 ## 📚 RAG Knowledge Base
 
-The RAG data includes:
-- Expected skills for the role
+The RAG data contains:
+- Role-specific expected skills
 - Preferred experience
 - Interview focus areas
 
-This ensures the analysis is **role-specific and consistent**.
+This ensures:
+- Grounded analysis
+- Reduced hallucination
+- Consistent evaluation logic
+
+---
+
+## 🖥️ User Interface (Streamlit)
+
+The Streamlit UI provides:
+- Resume upload (PDF / TXT)
+- Collapsible resume preview
+- One-click analysis
+- Highlighted eligibility verdict
+- Downloadable analysis report
+
+The UI is intentionally simple and focused on clarity.
 
 ---
 
 ## 🛠️ Tech Stack
 
-- Python
-- AutoGen
-- Ollama
-- llama3.2 (LLM)
-- ChromaDB (vector database)
-- Sentence-Transformers (embeddings)
-- Streamlit (UI)
-- PyPDF (PDF text extraction)
+- **Python**
+- **AutoGen** (agent orchestration)
+- **Ollama** (local LLM runtime)
+- **llama3.2** (text model)
+- **ChromaDB** (vector database)
+- **Sentence-Transformers** (embeddings)
+- **Streamlit** (UI)
+- **PyPDF** (PDF text extraction)
 
 ---
 
@@ -102,8 +124,7 @@ This ensures the analysis is **role-specific and consistent**.
 ```bash
 ollama serve
 ```
-
-### 2️⃣ Pull the required model
+### 2️⃣ Pull required model
 ```bash
 ollama pull llama3.2
 ```
@@ -111,42 +132,43 @@ ollama pull llama3.2
 ```bash
 streamlit run app.py
 ```
-
-The application will open automatically in your browser.
+The app will open automatically in your browser at `http://localhost:8501`.
 
 ---
 
-## 📌 Example Output
+
+## 📌Example Output
 
 Strengths:
 - Strong Python fundamentals
-- Relevant academic projects
+- Relevant academic and personal projects
 
 Skill Gaps:
 - Limited real-world experience
-- Needs stronger data structures knowledge
+- Needs deeper data structures knowledge
 
 Final Verdict:
 Applicable
 
 Reason:
-Candidate meets most core expectations with minor gaps that can be improved.
-
-## ⚠️ Notes
-- All resumes used are for testing/demo purposes
-- No real user data is stored
-- The project runs entirely locally
-
-## 🔮 Future Improvements
-- Support for multiple job roles
-- Resume scoring system
-- Export analysis as PDF
-- Advanced UI enhancements
+The candidate meets most core expectations with minor gaps that can be improved.
 
 ---
 
-## 🏁 Conclusion
-This project demonstrates how RAG can be applied to real-world evaluation tasks, combining AI reasoning with structured knowledge to produce meaningful and explainable results.
+## ⚠️ Notes
 
-It focuses on correctness, clarity, and practical applicability.
+- All resumes used are for demo/testing purposes
+- No personal data is stored
+- The application runs entirely locally
+
+## 🔮 Future Improvements
+
+- Support for multiple job roles
+- Resume scoring system
+- Export report as PDF
+- Advanced UI enhancements
+
+## 🏁 Conclusion
+
+This project demonstrates how **multi-agent AI systems combined with RAG** can be applied to real-world evaluation problems.
 

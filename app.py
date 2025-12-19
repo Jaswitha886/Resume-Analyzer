@@ -1,8 +1,8 @@
 import streamlit as st
 from pypdf import PdfReader
 
-# Import core logic from main.py
-from main import setup_rag, analyze_resume
+# Import orchestrator from main.py (multi-agent backend)
+from main import analyze_resume
 
 
 # ===============================
@@ -19,45 +19,105 @@ def extract_text_from_pdf(pdf_file):
 
 
 # ===============================
-# STREAMLIT UI
+# PAGE CONFIG
 # ===============================
 st.set_page_config(
-    page_title="Resume Analyzer (RAG)",
-    layout="centered"
+    page_title="Resume Analyzer",
+    page_icon="📄",
+    layout="wide"
 )
 
-st.title("📄 Resume Analyzer")
-st.write(
-    "Upload your resume (PDF or TXT) to receive structured feedback, "
-    "skill gap analysis, and interview preparation guidance using RAG."
+# ===============================
+# HEADER
+# ===============================
+st.markdown(
+    "<h1 style='text-align: center;'>📄 Resume Analyzer</h1>",
+    unsafe_allow_html=True
+)
+st.markdown(
+    "<p style='text-align: center;'>Multi-Agent Resume Evaluation using RAG</p>",
+    unsafe_allow_html=True
 )
 
-uploaded_file = st.file_uploader(
-    "Upload Resume",
-    type=["pdf", "txt"]
-)
+st.divider()
 
+# ===============================
+# UPLOAD SECTION
+# ===============================
+left, right = st.columns([1, 1])
+
+with left:
+    uploaded_file = st.file_uploader(
+        "📤 Upload Resume (PDF or TXT)",
+        type=["pdf", "txt"]
+    )
+
+with right:
+    st.info(
+        "🔍 **What this system does:**\n\n"
+        "- Extracts resume content\n"
+        "- Understands skills & experience using agents\n"
+        "- Compares with role expectations (RAG)\n"
+        "- Generates feedback and eligibility verdict"
+    )
+
+# ===============================
+# PROCESS FILE
+# ===============================
 if uploaded_file is not None:
-    # Read resume content
     if uploaded_file.type == "application/pdf":
         resume_text = extract_text_from_pdf(uploaded_file)
     else:
         resume_text = uploaded_file.read().decode("utf-8")
 
-    st.subheader("📄 Extracted Resume Content")
-    st.text_area(
-        label="",
-        value=resume_text,
-        height=200
+    st.divider()
+
+    # Show extracted resume text (collapsible)
+    with st.expander("📄 View Extracted Resume Text"):
+        st.text_area(
+            "Resume Content",
+            resume_text,
+            height=250,
+            label_visibility="collapsed"
+        )
+
+    analyze_clicked = st.button(
+        "🔍 Analyze Resume",
+        use_container_width=True
     )
 
-    if st.button("🔍 Analyze Resume"):
-        with st.spinner("Analyzing resume using RAG..."):
-            collection = setup_rag()
-            analysis_result = analyze_resume(resume_text, collection)
+    if analyze_clicked:
+        with st.spinner("Analyzing resume using multi-agent RAG pipeline..."):
+            analysis_result = analyze_resume(resume_text)
 
+        st.divider()
+
+        # ===============================
+        # FINAL VERDICT HIGHLIGHT
+        # ===============================
+        if "Final Verdict:" in analysis_result:
+            verdict_line = analysis_result.split("Final Verdict:")[1].split("\n")[0].strip()
+
+            if "Applicable" in verdict_line:
+                st.success("✅ Final Verdict: Applicable")
+            else:
+                st.error("❌ Final Verdict: Not Applicable")
+
+        # ===============================
+        # ANALYSIS REPORT
+        # ===============================
         st.subheader("📊 Resume Analysis Report")
-        st.write(analysis_result)
+        st.markdown(analysis_result)
+
+        # ===============================
+        # DOWNLOAD OPTION
+        # ===============================
+        st.download_button(
+            label="📥 Download Analysis Report",
+            data=analysis_result,
+            file_name="resume_analysis.txt",
+            mime="text/plain"
+        )
 
 else:
     st.info("Please upload a resume file to begin analysis.")
