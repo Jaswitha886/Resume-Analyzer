@@ -1,0 +1,42 @@
+{
+  "name": "Jaswitha",
+  "education": [
+    {
+      "degree": "Bachelor of Technology",
+      "branch": "Computer Science and Engineering",
+      "institution": "SRM Institute of Science and Technology",
+      "cgpa": "9.91"
+    }
+  ],
+  "skills": [
+    "Python",
+    "Machine Learning (Basic)",
+    "C",
+    "C++",
+    "Data Structures (Basic)",
+    "HTML",
+    "CSS"
+  ],
+  "projects": [
+    {
+      "title": "Smart Event Management Assistant",
+      "description": "An AI-based assistant designed to manage and optimize event planning and coordination."
+    },
+    {
+      "title": "Hackathon Project – TechVistra'25",
+      "description": "Developed a prototype solution during a competitive hackathon focused on AI-driven problem solving."
+    }
+  ],
+  "experience": [
+    {
+      "role": "Student Intern",
+      "organization": "Academic Project",
+      "duration": "3 months"
+    }
+  ],
+  "certifications": [
+    "NPTEL – Operating Systems",
+    "MongoDB Basics",
+    "Java Programming Basics"
+  ]
+}
