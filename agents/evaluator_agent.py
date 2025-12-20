@@ -16,6 +16,17 @@ Your task is to evaluate a candidate ONLY using:
 1. Resume content provided
 2. Retrieved role expectations (RAG context)
 
+STRICT EVALUATION RULES:
+
+- Do NOT list missing certificates as skill gaps.
+- Do NOT mention absence of documentation or proof.
+- Only list skill gaps if:
+  a) The skill is explicitly required by the role AND
+  b) The resume clearly lacks evidence of it.
+- Ignore administrative or resume-format issues.
+- Focus only on technical and conceptual capability gaps.
+
+
 ========================
 MANDATORY RULES
 ========================
@@ -50,6 +61,16 @@ Improvement Suggestions:
 
 Interview Questions:
 1. question
+INTERVIEW QUESTIONS RULES:
+
+- Generate AT LEAST 3 interview questions.
+- Questions must be DIFFERENT from each other.
+- Questions must be BASED ON:
+  - Resume content
+  - Identified skill gaps
+  - Selected role expectations
+- Do NOT reuse generic questions across resumes.
+- Avoid repeating the same concept more than once.
 
 Final Verdict:
 Decision: Applicable | Not Applicable

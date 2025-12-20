@@ -1,110 +1,168 @@
+# tools/json_formatter.py
+
 import re
 
-def infer_source(text: str) -> str:
-    text = text.lower()
+def get_role_based_questions(role: str):
+    if role == "AI / ML Intern":
+        return [
+            "Explain the difference between supervised and unsupervised learning with an example.",
+            "How would you evaluate the performance of a classification model?",
+            "Describe a machine learning project you would build end-to-end."
+        ]
 
-    if any(k in text for k in ["python", "java", "c++", "machine learning", "tensorflow", "keras"]):
-        return "Skills section"
-    if any(k in text for k in ["project", "hackathon", "assistant", "application"]):
-        return "Projects section"
-    if any(k in text for k in ["bachelor", "b.tech", "degree", "cgpa"]):
-        return "Education section"
-    if any(k in text for k in ["experience", "intern", "company"]):
-        return "Experience section"
+    if role == "Software Engineering Intern":
+        return [
+            "Explain the difference between an array and a linked list.",
+            "How would you debug a program that produces incorrect output?",
+            "What is the time complexity of common sorting algorithms?"
+        ]
 
-    return "Resume content"
+    if role == "Data Science Intern":
+        return [
+            "How do you handle missing values in a dataset?",
+            "Explain the difference between precision and recall.",
+            "Describe your approach to exploratory data analysis."
+        ]
 
+    # safe fallback
+    return [
+        "Explain a technical project you have worked on.",
+        "How do you approach problem-solving in programming?",
+        "What challenges do you face when learning new technologies?"
+    ]
 
-def analysis_to_json(text: str):
-    data = {
-        "strengths": [],
-        "skill_gaps": [],
-        "improvement_suggestions": [],
-        "interview_questions": [],
-        "final_verdict": {
-            "decision": "",
-            "confidence": None,
-            "reason": ""
-        }
+def analysis_to_json(analysis_text: str, role: str) -> dict:
+    """
+    Converts evaluator agent output (plain text) into structured JSON.
+    Designed to be defensive and hallucination-safe.
+    """
+
+    strengths = []
+    skill_gaps = []
+    improvement_suggestions = []
+    interview_questions = []
+    final_verdict = {
+        "decision": "",
+        "confidence": None,
+        "reason": ""
     }
 
-    section = None
-    verdict_block = []
-    capture_verdict = False
+    current_section = None
 
-    for raw_line in text.splitlines():
+    lines = analysis_text.splitlines()
+
+    for raw_line in lines:
         line = raw_line.strip()
+
         if not line:
             continue
 
         lower = line.lower()
 
-        # ---------- SECTION HEADERS ----------
-        if lower.startswith("strengths"):
-            section = "strengths"
-            capture_verdict = False
+        # -------- SECTION DETECTION --------
+        if "strengths" in lower:
+            current_section = "strengths"
             continue
 
-        if lower.startswith("skill gaps"):
-            section = "skill_gaps"
-            capture_verdict = False
+        if "skill gaps" in lower:
+            current_section = "skill_gaps"
             continue
 
-        if lower.startswith("improvement suggestions"):
-            section = "improvement_suggestions"
-            capture_verdict = False
+        if "improvement suggestions" in lower:
+            current_section = "improvement_suggestions"
             continue
 
-        if lower.startswith("interview questions"):
-            section = "interview_questions"
-            capture_verdict = False
+        if "interview questions" in lower:
+            current_section = "interview_questions"
             continue
 
-        # ---------- FINAL VERDICT ----------
-        if lower.startswith("final verdict"):
-            section = "final_verdict"
-            capture_verdict = True
-            verdict_block.append(line)
+        if "final verdict" in lower:
+            current_section = "final_verdict"
             continue
 
-        if capture_verdict:
-            verdict_block.append(line)
+        if lower.startswith("reason"):
+            current_section = "verdict_reason"
             continue
 
-        # ---------- LIST ITEMS ----------
-        if section in [
-            "strengths",
-            "skill_gaps",
-            "improvement_suggestions",
-            "interview_questions"
-        ]:
-            cleaned = re.sub(r"^[\-\*\•\.\d\)]\s*", "", line)
-            if cleaned:
-                source = infer_source(cleaned)
-                data[section].append({
-                    "text": cleaned,
-                    "source": source
-                })
+        # -------- CONTENT PARSING --------
+        cleaned = re.sub(r"^[\-\*\•\.\d]+\s*", "", line)
 
-    # ---------- PROCESS FINAL VERDICT ----------
-    verdict_text = " ".join(verdict_block).lower()
+        if current_section == "strengths":
+            strengths.append({
+                "text": cleaned,
+                "source": "Resume content"
+            })
 
-    if "not applicable" in verdict_text:
-        data["final_verdict"]["decision"] = "Not Applicable"
-    elif "applicable" in verdict_text:
-        data["final_verdict"]["decision"] = "Applicable"
-    else:
-        data["final_verdict"]["decision"] = "Not Applicable"
+        elif current_section == "skill_gaps":
+            # Skip weak / administrative gaps
+            if any(x in cleaned.lower() for x in [
+                "certificate",
+                "certification",
+                "documentation",
+                "missing proof"
+            ]):
+                continue
 
-    reason_match = re.search(
-        r"reason[:\s]*(.*)", " ".join(verdict_block), re.IGNORECASE
-    )
+            skill_gaps.append({
+                "text": cleaned,
+                "source": "Resume content"
+            })
 
-    if reason_match:
-        data["final_verdict"]["reason"] = reason_match.group(1).strip()
-    else:
-        data["final_verdict"]["reason"] = (
-            "The candidate does not sufficiently meet the mandatory requirements for the selected role."
+        elif current_section == "improvement_suggestions":
+            improvement_suggestions.append({
+                "text": cleaned
+            })
+
+        elif current_section == "interview_questions":
+            interview_questions.append({
+                "text": cleaned,
+                "source": "Evaluator"
+            })
+
+        elif current_section == "final_verdict":
+            if "applicable" in lower:
+                final_verdict["decision"] = "Applicable"
+            elif "not applicable" in lower:
+                final_verdict["decision"] = "Not Applicable"
+
+        elif current_section == "verdict_reason":
+            final_verdict["reason"] += cleaned + " "
+
+    # -------- POST-PROCESSING SAFETY NETS --------
+
+    # Ensure verdict decision exists
+    if not final_verdict["decision"]:
+        final_verdict["decision"] = "Not Applicable"
+
+    # Ensure verdict reason exists
+    if not final_verdict["reason"]:
+        final_verdict["reason"] = (
+            "The candidate does not sufficiently meet the mandatory requirements "
+            "for the selected role."
         )
+    else:
+        final_verdict["reason"] = final_verdict["reason"].strip()
 
-    return data
+    # -------- ROLE-AWARE INTERVIEW QUESTIONS SAFETY NET --------
+    role_based_defaults = get_role_based_questions(role)
+    
+    while len(interview_questions) < 3:
+        interview_questions.append({
+            "text": role_based_defaults[len(interview_questions)],
+            "source": "System generated"
+            })
+
+
+    # Limit list sizes to keep output clean
+    strengths = strengths[:5]
+    skill_gaps = skill_gaps[:5]
+    improvement_suggestions = improvement_suggestions[:5]
+    interview_questions = interview_questions[:5]
+
+    return {
+        "strengths": strengths,
+        "skill_gaps": skill_gaps,
+        "improvement_suggestions": improvement_suggestions,
+        "interview_questions": interview_questions,
+        "final_verdict": final_verdict
+    }
