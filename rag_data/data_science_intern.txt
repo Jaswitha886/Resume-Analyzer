@@ -1,0 +1,5 @@
+- Python for data analysis
+- Statistics and probability basics
+- Data cleaning and visualization
+- Machine learning fundamentals
+- Experience with datasets and analysis projects

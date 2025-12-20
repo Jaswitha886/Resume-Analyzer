@@ -1,0 +1,5 @@
+- Strong Python fundamentals
+- Understanding of machine learning basics
+- Familiarity with supervised and unsupervised learning
+- Hands-on ML projects
+- Basic data structures knowledge

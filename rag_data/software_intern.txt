@@ -1,0 +1,5 @@
+- Strong programming fundamentals (Python, Java, or C++)
+- Solid understanding of data structures and algorithms
+- Problem-solving skills
+- Git and version control usage
+- Project-based experience
