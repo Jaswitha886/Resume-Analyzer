@@ -1,78 +1,41 @@
-import json
-import re
+# main.py
 
-from agents.document_processor import document_processor_agent
-from agents.resume_reader import resume_reader_agent
-from agents.evaluator_agent import evaluator_agent
-from rag.rag_setup import setup_rag
+from agents.document_processor import create_document_processor
+from agents.resume_reader import create_resume_reader
+from agents.evaluator_agent import create_evaluator
+from rag.rag_setup import SimpleRAG
 
+LLM_CONFIG = {
+    "model": "llama3.2",
+    "base_url": "http://localhost:11434/v1",
+    "api_key": "ollama"
+}
 
-def try_parse_json(text: str):
-    """
-    Try to extract and parse JSON from LLM output.
-    Returns dict if successful, else None.
-    """
-    try:
-        return json.loads(text)
-    except Exception:
-        match = re.search(r"\{[\s\S]*\}", text)
-        if not match:
-            return None
+def run_resume_analysis(resume_text: str):
+    doc_agent = create_document_processor(LLM_CONFIG)
+    reader_agent = create_resume_reader(LLM_CONFIG)
+    evaluator_agent = create_evaluator(LLM_CONFIG)
 
-        cleaned = match.group()
-        cleaned = re.sub(r",\s*([\]}])", r"\1", cleaned)
-        cleaned = cleaned.replace("“", "\"").replace("”", "\"")
+    # Step 1: Clean resume
+    cleaned = doc_agent.generate_reply(messages=[{"role": "user", "content": resume_text}])
 
-        try:
-            return json.loads(cleaned)
-        except Exception:
-            return None
+    # Step 2: Understand resume
+    structured = reader_agent.generate_reply(messages=[{"role": "user", "content": cleaned}])
 
+    # Step 3: RAG
+    rag = SimpleRAG("rag_data/role_expectations.txt")
+    expectations = rag.retrieve(structured)
 
-def analyze_resume(resume_text: str) -> str:
-    collection = setup_rag()
+    # Step 4: Evaluate
+    eval_prompt = (
+        "Resume Summary:\n"
+        f"{structured}\n\n"
+        "Role Expectations:\n"
+        + "\n".join(expectations)
+    )
 
-    # Agent 1: Clean document
-    cleaned_text = document_processor_agent(resume_text)
+    final_analysis = evaluator_agent.generate_reply(
+        messages=[{"role": "user", "content": eval_prompt}]
+    )
 
-    # Agent 2: Understand resume
-    structured_resume = resume_reader_agent(cleaned_text)
-
-    # Agent 3: Evaluate (attempt 1)
-    raw_output = evaluator_agent(structured_resume, collection)
-    parsed = try_parse_json(raw_output)
-
-    # Retry once if invalid
-    if parsed is None:
-        raw_output = evaluator_agent(structured_resume, collection, retry=True)
-        parsed = try_parse_json(raw_output)
-
-    # Controlled fallback (never crash UI)
-    if parsed is None:
-        parsed = {
-            "strengths": ["Resume content partially aligns with expectations"],
-            "skill_gaps": ["Structured evaluation could not be fully generated"],
-            "improvement_suggestions": ["Improve resume clarity and formatting"],
-            "interview_questions": ["Explain your key projects in detail"],
-            "final_verdict": "Not Applicable",
-            "verdict_reason": "Model failed to produce valid structured output"
-        }
-
-    return f"""
-### Strengths
-- {"\n- ".join(parsed["strengths"])}
-
-### Skill Gaps
-- {"\n- ".join(parsed["skill_gaps"])}
-
-### Improvement Suggestions
-- {"\n- ".join(parsed["improvement_suggestions"])}
-
-### Interview Questions
-- {"\n- ".join(parsed["interview_questions"])}
-
-### Final Verdict
-**{parsed["final_verdict"]}**
-
-**Reason:** {parsed["verdict_reason"]}
-""".strip()
+    return final_analysis

@@ -1,68 +1,41 @@
 from autogen import ConversableAgent
 
+def create_evaluator(llm_config):
+    return ConversableAgent(
+        name="EvaluatorAgent",
+        system_message=(
+            "You are a strict resume evaluator.\n\n"
+            "OUTPUT FORMAT RULES (MANDATORY):\n"
+            "Use the following section headers EXACTLY as written.\n"
+            "Each section must start on a new line.\n\n"
 
-def evaluator_agent(structured_resume: str, collection, retry=False) -> str:
-    results = collection.query(
-        query_texts=[structured_resume],
-        n_results=6,
+            "FORMAT:\n"
+            "Strengths:\n"
+            "- point\n"
+            "- point\n\n"
+
+            "Skill Gaps:\n"
+            "- point\n"
+            "- point\n\n"
+
+            "Improvement Suggestions:\n"
+            "- point\n"
+            "- point\n\n"
+
+            "Interview Questions:\n"
+            "1. question\n"
+            "2. question\n\n"
+
+            "Final Verdict:\n"
+            "Decision: Applicable | Not Applicable\n"
+            "Reason: short, clear reason\n\n"
+
+            "Rules:\n"
+            "- Judge strictly against role expectations.\n"
+            "- If a mandatory skill is missing, decision MUST be Not Applicable.\n"
+            "- Do NOT merge sections.\n"
+            "- Do NOT add extra text."
+        ),
+        llm_config=llm_config,
+        human_input_mode="NEVER"
     )
-
-    retrieved_expectations = "\n".join(results["documents"][0])
-
-    agent = ConversableAgent(
-        name="resume_evaluator_agent",
-        llm_config={
-            "config_list": [
-                {
-                    "model": "llama3.2",
-                    "api_type": "ollama",
-                    "base_url": "http://localhost:11434",
-                }
-            ]
-        },
-        human_input_mode="NEVER",
-    )
-
-    retry_note = (
-        "\nThis is a retry. The previous output was rejected. "
-        "You MUST return ONLY VALID JSON.\n"
-        if retry else ""
-    )
-
-    prompt = f"""
-You are a resume evaluation agent.
-
-{retry_note}
-
-STRICT RULES:
-- Output ONLY valid JSON
-- No explanations
-- No markdown
-- No bullet points outside arrays
-- Every list item MUST be a quoted string
-
-JSON SCHEMA:
-
-{{
-  "strengths": ["string"],
-  "skill_gaps": ["string"],
-  "improvement_suggestions": ["string"],
-  "interview_questions": ["string"],
-  "final_verdict": "Applicable" | "Not Applicable",
-  "verdict_reason": "string"
-}}
-
-Structured Resume:
-{structured_resume}
-
-Role Expectations:
-{retrieved_expectations}
-
-RETURN ONLY JSON.
-"""
-
-    response = agent.generate_reply(
-        messages=[{"role": "user", "content": prompt}]
-    )
-
-    return response["content"]

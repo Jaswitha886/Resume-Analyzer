@@ -1,24 +1,21 @@
-import chromadb
+# rag/rag_setup.py
+
 from sentence_transformers import SentenceTransformer
+import numpy as np
 
+class SimpleRAG:
+    def __init__(self, role_file_path: str):
+        self.model = SentenceTransformer("all-MiniLM-L6-v2")
+        self.documents = self._load_documents(role_file_path)
+        self.embeddings = self.model.encode(self.documents)
 
-def setup_rag():
-    client = chromadb.Client()
-    collection = client.get_or_create_collection(name="role_expectations")
+    def _load_documents(self, path):
+        with open(path, "r", encoding="utf-8") as f:
+            text = f.read()
+        return [chunk.strip() for chunk in text.split("\n") if chunk.strip()]
 
-    embedder = SentenceTransformer("all-MiniLM-L6-v2")
-
-    with open("rag_data/role_expectations.txt", "r", encoding="utf-8") as f:
-        text = f.read()
-
-    chunks = [line for line in text.split("\n") if line.strip()]
-    embeddings = embedder.encode(chunks).tolist()
-
-    for i, chunk in enumerate(chunks):
-        collection.add(
-            documents=[chunk],
-            embeddings=[embeddings[i]],
-            ids=[str(i)],
-        )
-
-    return collection
+    def retrieve(self, query: str, top_k: int = 5):
+        query_emb = self.model.encode([query])[0]
+        scores = np.dot(self.embeddings, query_emb)
+        top_indices = np.argsort(scores)[-top_k:][::-1]
+        return [self.documents[i] for i in top_indices]
