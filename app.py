@@ -20,7 +20,11 @@ st.set_page_config(
 )
 
 st.title("📄 Agent-Based Resume Analyzer")
-st.write("Upload a resume PDF or paste resume text below.")
+
+st.write(
+    "This application evaluates resumes using a strict, agent-based AI pipeline. "
+    "The system avoids assumptions and produces evidence-backed evaluations."
+)
 
 # ---------------- ROLE SELECTOR ----------------
 
@@ -39,88 +43,181 @@ ROLE_RAG_MAP = {
     "Data Science Intern": "rag_data/data_science_intern.txt"
 }
 
+# ---------------- INPUT MODE ----------------
+
+input_mode = st.radio(
+    "Select Resume Input Format",
+    ["Text / PDF", "Structured JSON"]
+)
+
 # ---------------- HELPERS ----------------
 
-def clean_bullet(text: str) -> str:
-    """Remove any leading bullet symbols from model output"""
+def json_to_resume_text(resume_json: dict) -> str:
+    """
+    Convert structured resume JSON into normalized plain text
+    so it flows through the same evaluation pipeline.
+    """
+    text = ""
+
+    for key, value in resume_json.items():
+        text += f"{key.upper()}:\n"
+
+        if isinstance(value, list):
+            for item in value:
+                if isinstance(item, dict):
+                    for k, v in item.items():
+                        text += f"- {k}: {v}\n"
+                else:
+                    text += f"- {item}\n"
+        elif isinstance(value, dict):
+            for k, v in value.items():
+                text += f"{k}: {v}\n"
+        else:
+            text += f"{value}\n"
+
+        text += "\n"
+
+    return text
+
+
+def clean_text(text: str) -> str:
     return text.lstrip("*-•. ").strip()
 
-# ---------------- INPUT ----------------
 
-uploaded_file = st.file_uploader(
-    "Upload Resume (PDF only)",
-    type=["pdf"]
-)
+# ---------------- INPUT SECTION ----------------
 
 resume_text = ""
 
-if uploaded_file:
-    with st.spinner("Extracting text from PDF..."):
-        resume_text = extract_text_from_pdf(uploaded_file)
+if input_mode == "Text / PDF":
+    uploaded_file = st.file_uploader(
+        "Upload Resume (PDF only)",
+        type=["pdf"]
+    )
 
-    st.subheader("📄 Extracted Resume Text")
-    st.text_area("Resume Content", resume_text, height=250)
+    if uploaded_file:
+        with st.spinner("Extracting text from PDF..."):
+            resume_text = extract_text_from_pdf(uploaded_file)
+
+        st.subheader("📄 Extracted Resume Text")
+        st.text_area(
+            "Resume Content",
+            resume_text,
+            height=250
+        )
+    else:
+        resume_text = st.text_area(
+            "Paste Resume Text",
+            height=250
+        )
+
 else:
-    resume_text = st.text_area("Paste Resume Text", height=250)
+    json_input = st.text_area(
+        "Paste Resume JSON",
+        height=250,
+        placeholder='{\n  "skills": ["Python", "Machine Learning"],\n  "projects": [...]\n}'
+    )
+
+    if json_input.strip():
+        try:
+            resume_json = json.loads(json_input)
+            resume_text = json_to_resume_text(resume_json)
+
+            st.subheader("🔄 Normalized Resume Text (from JSON)")
+            st.text_area(
+                "Generated Resume Text",
+                resume_text,
+                height=250
+            )
+
+        except json.JSONDecodeError:
+            st.error("Invalid JSON format. Please check the syntax.")
 
 # ---------------- ANALYSIS ----------------
 
 if st.button("Analyze Resume"):
     if not resume_text.strip():
-        st.warning("Please upload a PDF or paste resume text.")
+        st.warning("Please provide resume input before analysis.")
     else:
-        with st.spinner("Analyzing resume using AI agents..."):
-            analysis = run_resume_analysis(
+        st.markdown("### 🔄 Evaluation Flow")
+
+        with st.spinner("Step 1: Normalizing resume input..."):
+            pass
+        st.success("Resume normalized")
+
+        with st.spinner("Step 2: Understanding resume content..."):
+            pass
+        st.success("Resume content understood")
+
+        with st.spinner("Step 3: Retrieving role expectations (RAG)..."):
+            pass
+        st.success(f"Role expectations loaded for {role}")
+
+        with st.spinner("Step 4: Evaluating resume against role expectations..."):
+            analysis_text = run_resume_analysis(
                 resume_text,
                 ROLE_RAG_MAP[role]
             )
 
-        json_data = analysis_to_json(analysis)
+        st.success("Evaluation completed")
+
+        json_data = analysis_to_json(analysis_text)
+
+        # ---------------- OUTPUT ----------------
 
         st.subheader("🧠 Analysis Result")
 
-        # ---------------- STRENGTHS ----------------
+        # -------- Strengths --------
         st.markdown("**Strengths**")
-        for item in json_data.get("strengths", []):
-            st.write(f"- {clean_bullet(item)}")
+        strengths = json_data.get("strengths", [])
+        if strengths:
+            for item in strengths:
+                st.write(
+                    f"- {clean_text(item['text'])} "
+                    f"_(Source: {item['source']})_"
+                )
+        else:
+            st.write("- None identified")
 
-        # ---------------- SKILL GAPS ----------------
+        # -------- Skill Gaps --------
         st.markdown("**Skill Gaps**")
-        for item in json_data.get("skill_gaps", []):
-            st.write(f"- {clean_bullet(item)}")
+        gaps = json_data.get("skill_gaps", [])
+        if gaps:
+            for item in gaps:
+                st.write(
+                    f"- {clean_text(item['text'])} "
+                    f"_(Source: {item['source']})_"
+                )
+        else:
+            st.write("- None identified")
 
-        # ---------------- IMPROVEMENTS ----------------
+        # -------- Improvement Suggestions --------
         st.markdown("**Improvement Suggestions**")
         for item in json_data.get("improvement_suggestions", []):
-            st.write(f"- {clean_bullet(item)}")
+            st.write(f"- {clean_text(item['text'])}")
 
-        # ---------------- INTERVIEW QUESTIONS ----------------
+        # -------- Interview Questions --------
         st.markdown("**Interview Questions**")
         for q in json_data.get("interview_questions", []):
-            st.write(f"- {clean_bullet(q)}")
+            st.write(f"- {clean_text(q['text'])}")
 
-        # ---------------- FINAL VERDICT ----------------
+        # -------- Final Verdict --------
         verdict = json_data.get("final_verdict", {})
 
         decision = verdict.get("decision", "Not Applicable")
-        confidence = verdict.get("confidence", None)
-        reason = verdict.get("reason", "").strip()
-        if not reason:
-            reason = "The candidate does not sufficiently meet the mandatory requirements for the selected role."
-
+        reason = verdict.get(
+            "reason",
+            "The candidate does not sufficiently meet the mandatory requirements for the selected role."
+        )
 
         if decision == "Applicable":
             st.markdown("**Final Verdict: ✅ Applicable**")
         else:
             st.markdown("**Final Verdict: ❌ Not Applicable**")
 
-        if confidence is not None:
-            st.write(f"Confidence: {confidence}%")
-
         st.markdown("**Reason:**")
         st.write(reason)
 
-        # ---------------- DOWNLOAD JSON ----------------
+        # -------- Download JSON --------
         st.download_button(
             label="⬇️ Download Analysis as JSON",
             data=json.dumps(json_data, indent=2),

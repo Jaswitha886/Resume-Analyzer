@@ -1,170 +1,159 @@
-# 📄 Resume Analyzer using Multi-Agent RAG (with UI & PDF Support)
+# 📄 Agent-Based Resume Analyzer (Precision-Focused)
 
-## 📌 Project Overview
+## 📌 Overview
 
-This project is a **Resume Analyzer system** built using a **multi-agent architecture** and **Retrieval-Augmented Generation (RAG)**.
+This project is a **local, agent-based Resume Analyzer** designed to demonstrate **agentic AI reasoning with strict control and no hallucinations**.
 
-The application allows users to upload a **resume in PDF or TXT format**, analyzes it against predefined **role expectations**, and generates:
-
-- Structured resume feedback
-- Skill gap analysis
-- Improvement suggestions
-- Interview preparation questions
-- A **final eligibility verdict** (Applicable / Not Applicable)
-
-The system runs **fully locally** using **Ollama**, without any paid APIs.
+The system follows a **clear, deterministic evaluation flow** instead of relying on a single LLM call.  
+Every evaluation point is **evidence-backed** and traceable to resume content or role expectations.
 
 ---
 
-## 🎯 Problem Statement
+## 🎯 Objectives
 
-Manual resume screening is often:
-- Time-consuming
-- Subjective
-- Inconsistent
-
-This project explores how **agentic AI systems + RAG** can assist by providing:
-- Objective evaluation
-- Role-specific feedback
-- Explainable decision-making
+- Avoid hallucinations and assumptions
+- Ensure traceability for every evaluation point
+- Demonstrate multi-agent reasoning
+- Ground evaluation using role-based RAG
+- Produce structured yet human-readable output
 
 ---
 
-## 🧠 System Architecture
+## 🧠 Evaluation Flow
 
  ```mermaid
 flowchart TD
-    A[User] --> B[Resume]
-    B --> C[Agent 1: Document Processor]
-    C --> D[Agent 2: Resume Reader]
-    D --> E[Agent 3: Evaluator]
-    E --> F[Final Analysis + Verdict]
-    F --> G[Streamlit UI Output]
+    A[User] --> B[Resume Input (Text / PDF / JSON)]
+    B --> C[Normalization Layer]
+    C --> D[Resume Reader Agent]
+    D --> E[Role Expectations (RAG)]
+    E --> F[Evaluator Agent (Strict)]
+    F --> G[Structured Output + Verdict]
 ```
 
-Each agent has a **single responsibility**, making the system modular and explainable.
-
 
 ---
 
-## 🤖 Multi-Agent Design
+## 🧩 Agents
 
-### 🧑‍🔧 Agent 1: Document Processor
+### 1️⃣ Document Processor Agent
 - Cleans and normalizes resume text
-- Removes noise and formatting
-- Performs no evaluation
+- Removes formatting noise
+- Prepares input for downstream agents
 
-### 📖 Agent 2: Resume Reader
+### 2️⃣ Resume Reader Agent
 - Understands resume content
-- Extracts structured information:
-  - Education
-  - Skills
-  - Projects
-  - Experience
+- Identifies skills, education, projects, and experience
+- Does **not** perform evaluation
 
-### 🧠 Agent 3: Evaluator Agent (RAG)
-- Retrieves role expectations from the RAG knowledge base
-- Compares them with the structured resume
-- Generates:
-  - Strengths
-  - Skill gaps
-  - Suggestions
-  - Interview questions
-  - **Final eligibility decision**
+### 3️⃣ Evaluator Agent (Strict)
+- Compares resume content against role expectations
+- Uses **only explicit evidence**
+- Avoids assumptions and vague language
+- Produces limited, factual output
 
 ---
 
-## 📚 RAG Knowledge Base
+## 📚 Role-Based Grounding (RAG)
 
-The RAG data contains:
-- Role-specific expected skills
-- Preferred experience
-- Interview focus areas
+- Role expectations are stored as simple text files
+- Retrieved before evaluation
+- Ensures decisions are role-specific, not generic
 
-This ensures:
-- Grounded analysis
-- Reduced hallucination
-- Consistent evaluation logic
+Supported roles:
+- AI / ML Intern
+- Software Engineering Intern
+- Data Science Intern
 
 ---
 
-## 🖥️ User Interface (Streamlit)
+## 📝 Supported Resume Inputs
 
-The Streamlit UI provides:
-- Resume upload (PDF / TXT)
-- Collapsible resume preview
-- One-click analysis
-- Highlighted eligibility verdict
-- Downloadable analysis report
+### ✅ Text Input
+- Paste resume text directly
 
-The UI is intentionally simple and focused on clarity.
+### ✅ PDF Input
+- Resume text extracted locally
+- No external APIs used
+
+### ✅ Structured JSON Input
+Used to demonstrate **structured → normalized → evaluated** flow.
+
+Example:
+```json
+{
+  "skills": ["Python", "Machine Learning"],
+  "projects": ["Smart Event Management Assistant"],
+  "education": "B.Tech CSE, CGPA 9.91"
+}
+```
+
+---
+
+## 🧪 Hallucination Control Strategy
+
+- Strict evaluator constraints
+- No assumed skills or experience
+- Limited output size
+- Deterministic JSON parsing
+- Conservative defaults
+If information is missing, it is stated explicitly.
+
+---
+
+## 🖥️ User Interface
+
+- Clean Streamlit UI
+- Step-by-step evaluation flow
+- Human-readable results
+- Optional JSON download
 
 ---
 
 ## 🛠️ Tech Stack
 
-- **Python**
-- **AutoGen** (agent orchestration)
-- **Ollama** (local LLM runtime)
-- **llama3.2** (text model)
-- **ChromaDB** (vector database)
-- **Sentence-Transformers** (embeddings)
-- **Streamlit** (UI)
-- **PyPDF** (PDF text extraction)
+- Python
+- AutoGen (ConversableAgent – v0.7.x)
+- Ollama (local LLMs)
+- Streamlit
+- Sentence Transformers
 
 ---
 
-## 🚀 How to Run the Project
+## 🚀 Running the Project
 
-### 1️⃣ Start Ollama
-```bash
-ollama serve
-```
-### 2️⃣ Pull required model
-```bash
-ollama pull llama3.2
-```
-### 3️⃣ Run the UI
-```bash
+``` bash
+python -m venv .venv
+source .venv/bin/activate  # Windows: .venv\Scripts\activate
+
+pip install -r requirements.txt
+
 streamlit run app.py
 ```
-The app will open automatically in your browser at `http://localhost:8501`.
+---
+
+## 📌 Project Status
+
+- Stable and demo-ready
+- Focused on learning agentic AI concepts
+- Not production-hardened by design
 
 ---
 
+## 🧠 Key Learnings
 
-## 📌Example Output
-
-Strengths:
-- Strong Python fundamentals
-- Relevant academic and personal projects
-
-Skill Gaps:
-- Limited real-world experience
-- Needs deeper data structures knowledge
-
-Final Verdict:
-Applicable
-
-Reason:
-The candidate meets most core expectations with minor gaps that can be improved.
+- Agent-based reasoning pipelines
+- Resume understanding vs evaluation separation
+- Role-grounded evaluation using RAG
+- Hallucination control in LLM systems
+- Evidence-backed decision making
 
 ---
 
-## ⚠️ Notes
+## ✅ Conclusion
 
-- All resumes used are for demo/testing purposes
-- No personal data is stored
-- The application runs entirely locally
+This project demonstrates how agent-based AI systems can be designed with **clear flow, strict constraints, and explainable reasoning**.
 
-## 🔮 Future Improvements
+By separating resume understanding from evaluation, grounding decisions using role-based retrieval, and enforcing evidence-backed outputs, the system avoids hallucinations and produces **precise, defensible results**.
 
-- Support for multiple job roles
-- Resume scoring system
-- Export report as PDF
-- Advanced UI enhancements
-
-## 🏁 Conclusion
-
-This project demonstrates how **multi-agent AI systems combined with RAG** can be applied to real-world evaluation problems.
-
+The project intentionally prioritizes **clarity and correctness over feature complexity**, making it suitable for learning, review, and demonstration of agentic AI concepts.

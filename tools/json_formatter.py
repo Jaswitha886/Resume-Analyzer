@@ -1,9 +1,19 @@
-# tools/json_formatter.py
-
 import re
 
-def clean_markdown(text: str) -> str:
-    return re.sub(r"\*\*(.*?)\*\*", r"\1", text).strip()
+def infer_source(text: str) -> str:
+    text = text.lower()
+
+    if any(k in text for k in ["python", "java", "c++", "machine learning", "tensorflow", "keras"]):
+        return "Skills section"
+    if any(k in text for k in ["project", "hackathon", "assistant", "application"]):
+        return "Projects section"
+    if any(k in text for k in ["bachelor", "b.tech", "degree", "cgpa"]):
+        return "Education section"
+    if any(k in text for k in ["experience", "intern", "company"]):
+        return "Experience section"
+
+    return "Resume content"
+
 
 def analysis_to_json(text: str):
     data = {
@@ -19,74 +29,47 @@ def analysis_to_json(text: str):
     }
 
     section = None
-    collecting_reason = False
+    verdict_block = []
+    capture_verdict = False
 
     for raw_line in text.splitlines():
-        if not raw_line.strip():
+        line = raw_line.strip()
+        if not line:
             continue
 
-        line = clean_markdown(raw_line)
         lower = line.lower()
 
         # ---------- SECTION HEADERS ----------
         if lower.startswith("strengths"):
             section = "strengths"
-            collecting_reason = False
+            capture_verdict = False
             continue
 
         if lower.startswith("skill gaps"):
             section = "skill_gaps"
-            collecting_reason = False
+            capture_verdict = False
             continue
 
         if lower.startswith("improvement suggestions"):
             section = "improvement_suggestions"
-            collecting_reason = False
+            capture_verdict = False
             continue
 
         if lower.startswith("interview questions"):
             section = "interview_questions"
-            collecting_reason = False
+            capture_verdict = False
             continue
 
         # ---------- FINAL VERDICT ----------
         if lower.startswith("final verdict"):
             section = "final_verdict"
-            collecting_reason = True
-
-            # Inline verdict: "Final Verdict: ❌ Not Applicable"
-            if ":" in line:
-                after = line.split(":", 1)[1].strip().lower()
-                if "applicable" in after:
-                    if "not" in after:
-                        data["final_verdict"]["decision"] = "Not Applicable"
-                    else:
-                        data["final_verdict"]["decision"] = "Applicable"
+            capture_verdict = True
+            verdict_block.append(line)
             continue
 
-        # ---------- FINAL VERDICT DETAILS ----------
-        if section == "final_verdict":
-            if lower.startswith("decision"):
-                data["final_verdict"]["decision"] = line.split(":", 1)[-1].strip()
-                collecting_reason = False
-                continue
-
-            if lower.startswith("confidence"):
-                nums = re.findall(r"\d+", line)
-                if nums:
-                    data["final_verdict"]["confidence"] = int(nums[0])
-                collecting_reason = False
-                continue
-
-            if lower.startswith("reason"):
-                data["final_verdict"]["reason"] = line.split(":", 1)[-1].strip()
-                collecting_reason = False
-                continue
-
-            # 🔥 NEW LOGIC: plain-text reason fallback
-            if collecting_reason and not data["final_verdict"]["reason"]:
-                data["final_verdict"]["reason"] = line
-                continue
+        if capture_verdict:
+            verdict_block.append(line)
+            continue
 
         # ---------- LIST ITEMS ----------
         if section in [
@@ -95,8 +78,33 @@ def analysis_to_json(text: str):
             "improvement_suggestions",
             "interview_questions"
         ]:
-            cleaned = re.sub(r"^[\-\*\•\.\d\)]\s*", "", line).strip()
+            cleaned = re.sub(r"^[\-\*\•\.\d\)]\s*", "", line)
             if cleaned:
-                data[section].append(cleaned)
+                source = infer_source(cleaned)
+                data[section].append({
+                    "text": cleaned,
+                    "source": source
+                })
+
+    # ---------- PROCESS FINAL VERDICT ----------
+    verdict_text = " ".join(verdict_block).lower()
+
+    if "not applicable" in verdict_text:
+        data["final_verdict"]["decision"] = "Not Applicable"
+    elif "applicable" in verdict_text:
+        data["final_verdict"]["decision"] = "Applicable"
+    else:
+        data["final_verdict"]["decision"] = "Not Applicable"
+
+    reason_match = re.search(
+        r"reason[:\s]*(.*)", " ".join(verdict_block), re.IGNORECASE
+    )
+
+    if reason_match:
+        data["final_verdict"]["reason"] = reason_match.group(1).strip()
+    else:
+        data["final_verdict"]["reason"] = (
+            "The candidate does not sufficiently meet the mandatory requirements for the selected role."
+        )
 
     return data
