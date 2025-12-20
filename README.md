@@ -23,11 +23,11 @@ Every evaluation point is **evidence-backed** and traceable to resume content or
 
  ```mermaid
 flowchart TD
-    A[User] --> B[Resume Input (Text / PDF / JSON)]
+    A[User] --> B[Resume Input]
     B --> C[Normalization Layer]
     C --> D[Resume Reader Agent]
-    D --> E[Role Expectations (RAG)]
-    E --> F[Evaluator Agent (Strict)]
+    D --> E[Role Expectations]
+    E --> F[Evaluator Agent]
     F --> G[Structured Output + Verdict]
 ```
 
