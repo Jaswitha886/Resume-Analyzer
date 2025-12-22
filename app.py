@@ -1,10 +1,11 @@
-# app.py
-
 import sys
 import os
 import json
 import streamlit as st
 
+# -------------------------------------------------
+# Path Fix (important for local imports)
+# -------------------------------------------------
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from main import run_resume_analysis
@@ -14,7 +15,6 @@ from tools.json_formatter import analysis_to_json
 # -------------------------------------------------
 # Page Configuration
 # -------------------------------------------------
-
 st.set_page_config(
     page_title="Agentic Resume Analyzer",
     layout="centered"
@@ -23,7 +23,6 @@ st.set_page_config(
 # -------------------------------------------------
 # Header
 # -------------------------------------------------
-
 st.title("📄 Agentic Resume Analyzer")
 st.caption(
     "Flow-based, role-grounded resume evaluation with strict and explainable reasoning."
@@ -34,7 +33,6 @@ st.divider()
 # -------------------------------------------------
 # Role Selection
 # -------------------------------------------------
-
 st.markdown("### 🎯 Select Target Role")
 
 role = st.selectbox(
@@ -57,7 +55,6 @@ st.divider()
 # -------------------------------------------------
 # Resume Input
 # -------------------------------------------------
-
 st.markdown("### 📥 Resume Input")
 
 uploaded_file = st.file_uploader(
@@ -85,23 +82,54 @@ st.divider()
 # -------------------------------------------------
 # Flow Explanation
 # -------------------------------------------------
-
 st.markdown("### 🔄 Evaluation Flow")
 st.info(
     "Input → Normalization → Resume Understanding → Role Grounding → Strict Evaluation"
 )
 
 # -------------------------------------------------
-# Helper
+# Helpers
 # -------------------------------------------------
-
 def clean_text(text: str) -> str:
     return text.lstrip("*-•. ").strip()
+
+def build_ui_report(json_data: dict, role: str) -> str:
+    lines = []
+
+    lines.append("AGENTIC RESUME ANALYSIS REPORT")
+    lines.append("=" * 40)
+    lines.append(f"Target Role: {role}\n")
+
+    lines.append("Strengths:")
+    for item in json_data.get("strengths", []):
+        lines.append(f"- {item['text']}")
+    lines.append("")
+
+    lines.append("Skill Gaps:")
+    for item in json_data.get("skill_gaps", []):
+        lines.append(f"- {item['text']}")
+    lines.append("")
+
+    lines.append("Improvement Suggestions:")
+    for item in json_data.get("improvement_suggestions", []):
+        lines.append(f"- {item['text']}")
+    lines.append("")
+
+    lines.append("Interview Questions:")
+    for q in json_data.get("interview_questions", []):
+        lines.append(f"- {q['text']}")
+    lines.append("")
+
+    verdict = json_data.get("final_verdict", {})
+    lines.append("Final Verdict:")
+    lines.append(f"Decision: {verdict.get('decision')}")
+    lines.append(f"Reason: {verdict.get('reason')}")
+
+    return "\n".join(lines)
 
 # -------------------------------------------------
 # Analysis Trigger
 # -------------------------------------------------
-
 if st.button("Analyze Resume", type="primary"):
     if not resume_text.strip():
         st.warning("Please provide resume content before analysis.")
@@ -133,9 +161,9 @@ if st.button("Analyze Resume", type="primary"):
             st.write(f"- {clean_text(item['text'])}")
 
         # ---------------- Interview Questions ----------------
-        with st.expander("💬 Interview Questions"):
-            for q in json_data.get("interview_questions", []):
-                st.write(f"- {clean_text(q['text'])}")
+        st.markdown("### 💬 Interview Questions")
+        for q in json_data.get("interview_questions", []):
+            st.write(f"- {clean_text(q['text'])}")
 
         # ---------------- Final Verdict ----------------
         verdict = json_data.get("final_verdict", {})
@@ -160,11 +188,21 @@ if st.button("Analyze Resume", type="primary"):
             st.markdown("**Reason**")
             st.write(reason)
 
-        # ---------------- Download JSON ----------------
+        # ---------------- Downloads ----------------
         st.divider()
+
         st.download_button(
             "⬇️ Download Analysis as JSON",
             data=json.dumps(json_data, indent=2),
             file_name="resume_analysis.json",
             mime="application/json"
+        )
+
+        ui_report = build_ui_report(json_data, role)
+
+        st.download_button(
+            "⬇️ Download UI Report (TXT)",
+            data=ui_report,
+            file_name="resume_analysis_report.txt",
+            mime="text/plain"
         )
