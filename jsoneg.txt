@@ -1,42 +1,52 @@
 {
-  "name": "Jaswitha",
-  "education": [
+  "strengths": [
     {
-      "degree": "Bachelor of Technology",
-      "branch": "Computer Science and Engineering",
-      "institution": "SRM Institute of Science and Technology",
-      "cgpa": "9.91"
-    }
-  ],
-  "skills": [
-    "Python",
-    "Machine Learning (Basic)",
-    "C",
-    "C++",
-    "Data Structures (Basic)",
-    "HTML",
-    "CSS"
-  ],
-  "projects": [
-    {
-      "title": "Smart Event Management Assistant",
-      "description": "An AI-based assistant designed to manage and optimize event planning and coordination."
+      "text": "Bachelor's degree in Computer Science and Engineering from a reputable institution (SRM Institute of Science and Technology) with a high GPA, indicating strong academic foundation.",
+      "source": "Resume content"
     },
     {
-      "title": "Hackathon Project – TechVistra'25",
-      "description": "Developed a prototype solution during a competitive hackathon focused on AI-driven problem solving."
+      "text": "Certification in Operating Systems (NPTEL), MongoDB Basics, and Python for Machine Learning demonstrates commitment to learning specialized skills.",
+      "source": "Resume content"
     }
   ],
-  "experience": [
+  "skill_gaps": [
     {
-      "role": "Student Intern",
-      "organization": "Academic Project",
-      "duration": "3 months"
+      "text": "Basic data structures knowledge is mentioned as required by the role but no specific programming implementation or experience with common data structures like graphs, trees, etc. is provided in the resume.",
+      "source": "Resume content"
+    },
+    {
+      "text": "Familiarity with deep learning models and techniques, which are a crucial component of modern machine learning, are not explicitly mentioned despite mention of supervised and unsupervised learning.",
+      "source": "Resume content"
     }
   ],
-  "certifications": [
-    "NPTEL – Operating Systems",
-    "MongoDB Basics",
-    "Java Programming Basics"
-  ]
+  "improvement_suggestions": [
+    {
+      "text": "Showcase practical projects under \"Experience\" to provide hands-on experience with machine learning and data structures skills, bridging the gap with role expectations."
+    },
+    {
+      "text": "Elaborate on technical details and implementation in \"Experience\" sections to complement certifications rather than relying solely on them."
+    },
+    {
+      "text": "Develop a more comprehensive skill set by including programming languages like Java for Java-specific libraries, C++ for Boost, or additional general networking skills."
+    }
+  ],
+  "interview_questions": [
+    {
+      "text": "What motivated you to pursue machine learning and what specific problem areas have you focused on in your projects?",
+      "source": "Evaluator"
+    },
+    {
+      "text": "How do you handle bias or imbalanced data in supervised machine learning models, ensuring fair predictions?",
+      "source": "Evaluator"
+    },
+    {
+      "text": "Can you explain how K-Means clustering works? Provide an example where you applied it to a real-world dataset?",
+      "source": "Evaluator"
+    }
+  ],
+  "final_verdict": {
+    "decision": "Applicable",
+    "confidence": null,
+    "reason": "The candidate meets the core requirements for the selected role based on demonstrated skills, academic background, and relevant experience."
+  }
 }

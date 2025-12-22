@@ -2,6 +2,7 @@
 
 import re
 
+
 def get_role_based_questions(role: str):
     if role == "AI / ML Intern":
         return [
@@ -24,23 +25,25 @@ def get_role_based_questions(role: str):
             "Describe your approach to exploratory data analysis."
         ]
 
-    # safe fallback
+    # Safe fallback
     return [
         "Explain a technical project you have worked on.",
         "How do you approach problem-solving in programming?",
         "What challenges do you face when learning new technologies?"
     ]
 
+
 def analysis_to_json(analysis_text: str, role: str) -> dict:
     """
     Converts evaluator agent output (plain text) into structured JSON.
-    Designed to be defensive and hallucination-safe.
+    Defensive, role-aware, and hallucination-safe.
     """
 
     strengths = []
     skill_gaps = []
     improvement_suggestions = []
     interview_questions = []
+
     final_verdict = {
         "decision": "",
         "confidence": None,
@@ -48,12 +51,10 @@ def analysis_to_json(analysis_text: str, role: str) -> dict:
     }
 
     current_section = None
-
     lines = analysis_text.splitlines()
 
     for raw_line in lines:
         line = raw_line.strip()
-
         if not line:
             continue
 
@@ -85,7 +86,10 @@ def analysis_to_json(analysis_text: str, role: str) -> dict:
             continue
 
         # -------- CONTENT PARSING --------
-        cleaned = re.sub(r"^[\-\*\•\.\d]+\s*", "", line)
+        cleaned = re.sub(r"^[\-\*\•\.\d]+\s*", "", line).strip()
+
+        if not cleaned:
+            continue
 
         if current_section == "strengths":
             strengths.append({
@@ -120,10 +124,10 @@ def analysis_to_json(analysis_text: str, role: str) -> dict:
             })
 
         elif current_section == "final_verdict":
-            if "applicable" in lower:
-                final_verdict["decision"] = "Applicable"
-            elif "not applicable" in lower:
+            if "not applicable" in lower:
                 final_verdict["decision"] = "Not Applicable"
+            elif "applicable" in lower:
+                final_verdict["decision"] = "Applicable"
 
         elif current_section == "verdict_reason":
             final_verdict["reason"] += cleaned + " "
@@ -134,26 +138,31 @@ def analysis_to_json(analysis_text: str, role: str) -> dict:
     if not final_verdict["decision"]:
         final_verdict["decision"] = "Not Applicable"
 
-    # Ensure verdict reason exists
-    if not final_verdict["reason"]:
-        final_verdict["reason"] = (
-            "The candidate does not sufficiently meet the mandatory requirements "
-            "for the selected role."
-        )
+    # Ensure verdict reason exists AND MATCHES decision
+    if not final_verdict["reason"].strip():
+        if final_verdict["decision"] == "Applicable":
+            final_verdict["reason"] = (
+                "The candidate meets the core requirements for the selected role "
+                "based on demonstrated skills, academic background, and relevant experience."
+            )
+        else:
+            final_verdict["reason"] = (
+                "The candidate does not sufficiently meet the mandatory requirements "
+                "for the selected role."
+            )
     else:
         final_verdict["reason"] = final_verdict["reason"].strip()
 
     # -------- ROLE-AWARE INTERVIEW QUESTIONS SAFETY NET --------
     role_based_defaults = get_role_based_questions(role)
-    
+
     while len(interview_questions) < 3:
         interview_questions.append({
             "text": role_based_defaults[len(interview_questions)],
             "source": "System generated"
-            })
+        })
 
-
-    # Limit list sizes to keep output clean
+    # -------- LIMIT LIST SIZES --------
     strengths = strengths[:5]
     skill_gaps = skill_gaps[:5]
     improvement_suggestions = improvement_suggestions[:5]
